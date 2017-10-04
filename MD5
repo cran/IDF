@@ -1,0 +1,12 @@
+8eb5c404fa08b8ea546a8b2ec5b59c70 *DESCRIPTION
+e71eb48fe6aa2961bf1137498448d88a *NAMESPACE
+ee59e8dbb392872b7fb0890c19f68ad8 *R/IDF.R
+021f65312c5feb526decd4f55de81c32 *man/IDF.fit.Rd
+17af095e2b6680ecd05f15b86ae80eb0 *man/IDF.nll.Rd
+f1e9788038fce6daf6f0d0b9f60e561e *man/IDF.plot.Rd
+86efa2187a6e1a4735f3efeb41b173ef *man/IDF.read.Rd
+d59d9ae5ad666d01f380e8667056a6a7 *man/TS.acc.Rd
+ae4a154f118a68ef7567db4f2779aff8 *man/dgev.d.Rd
+a2aaa5d652991ffb7613cec8ed423ca7 *man/fit.fun.Rd
+b439bfb4c59f68628d5aed5e12db3e3b *man/qgev.d.Rd
+efeaddc4d2c1f93f104c3e86e7e9a6b0 *man/rgev.d.Rd
