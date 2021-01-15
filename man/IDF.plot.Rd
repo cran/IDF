@@ -2,43 +2,48 @@
 % Please edit documentation in R/IDF.R
 \name{IDF.plot}
 \alias{IDF.plot}
-\title{Plotting IDF curves}
+\title{Plotting of IDF curves at a chosen station}
 \usage{
-IDF.plot(pars, probs = c(0.5, 0.9, 0.99), dur = c(0.5, 1, 2, 3, 6, 12, 24,
-  48, 72, 96), cols = c(rgb(1, 0, 0, 1), rgb(0, 1, 0, 1), rgb(0, 0, 1, 1)),
-  st.name = "Berlin-Dahlem", dt.name = "obs", ints = NA, ds = NA)
+IDF.plot(
+  durations,
+  fitparams,
+  probs = c(0.5, 0.9, 0.99),
+  cols = 4:2,
+  add = FALSE,
+  legend = TRUE,
+  ...
+)
 }
 \arguments{
-\item{pars}{a vector of IDF model parameters mu,sigma,xi,eta,theta}
+\item{durations}{vector of durations for which to calculate the quantiles.}
 
-\item{probs}{a vector of probabilities for which the IDF curves are calculated}
+\item{fitparams}{vector containing parameters mut, sigma0, xi, theta, eta
+(modified location, scale offset, shape, duration offset, duration exponent) for chosen station
+as obtained from \code{\link{gev.d.fit}}
+(or \code{\link{gev.d.params}} for model with covariates).}
 
-\item{dur}{a vector of durations at which the IDF curves are calculated}
+\item{probs}{vector of non-exceedance probabilities for which to plot IDF curves (p = 1-1/(Return Period))}
 
-\item{cols}{a vector of colors for the seperate IDF curves, needs same length as \code{probs}}
+\item{cols}{vector of colors for IDF curves. Should have same length as \code{probs}}
 
-\item{st.name}{\code{character} overall naming of the IDF plot, e.g. name of location or model name}
+\item{add}{logical indicating if plot should be added to existing plot, default is FALSE}
 
-\item{dt.name}{\code{character} naming the data points, e.g. obs or model name}
+\item{legend}{logical indicating if legend should be plotted (TRUE, the default)}
 
-\item{ints}{\code{vector} of observational intensities (surted by durations)}
-
-\item{ds}{\code{vector} of durations (same length as intensities)}
+\item{...}{additional parameters passed on to the \code{plot} function}
 }
 \description{
-The function \code{IDF.plot} plots a set of IDF curves with given IDF model parameters \code{pars} for
-several probability levels \code{probs} at given durations \code{dur}. The colors of the curves can be defined with
-parameter \code{cols} (need to have same length as \code{probs}). The \code{station.name} will be printed in the legend.
+Plotting of IDF curves at a chosen station
 }
 \examples{
-RR <- rgamma(10*30*24,shape=1)
-year <- sort(rep(1:(10),30*24))
-data <- data.frame(RR,year)
-fit <- IDF.fit(data)
-param <- fit$par
-IDF.plot(pars=param,st.name="example",dt.name="rgamma")
+data('example',package = 'IDF')
+# fit d-gev
+fit <- gev.d.fit(example$dat,example$d,ydat = as.matrix(example[,c("cov1","cov2")])
+                 ,mutl = c(1,2),sigma0l = 1)
+# get parameters for cov1 = 1, cov2 = 1
+par <- gev.d.params(fit = fit, ydat = matrix(1,1,2))
+# plot quantiles
+IDF.plot(durations = seq(0.5,35,0.2),fitparams = par)
+# add data points
+points(example[example$cov1==1,]$d,example[example$cov1==1,]$dat)
 }
-\author{
-Christoph Ritschel \email{christoph.ritschel@met.fu-berlin.de}
-}
-
