@@ -1,11 +1,12 @@
 Package: IDF
 Type: Package
 Title: Estimation and Plotting of IDF Curves
-Version: 2.0.0
-Date: 2021-01-15
+Version: 2.1.0
+Date: 2021-04-07
 Authors@R: c(person("Jana", "Ulrich", email = "jana.ulrich@met.fu-berlin.de", role = c("aut", "cre")),
 	    person("Laura","Mack", email= "laura.mack@fu-berlin.de",role="ctb"),
 	    person("Oscar E.","Jurado", email= "jurado@zedat.fu-berlin.de",role="ctb"),
+	    person("Felix S.","Fauer", email= "felix.fauer@met.fu-berlin.de",role="ctb"),
             person("Christoph", "Ritschel", role = "aut"),
             person("Carola", "Detring", role = "ctb"),
             person("Sarah", "Joedicke", role = "ctb"))
@@ -19,6 +20,7 @@ Description: Intensity-duration-frequency (IDF) curves are a widely used analysi
 Author: Jana Ulrich [aut, cre],
   Laura Mack [ctb],
   Oscar E. Jurado [ctb],
+  Felix S. Fauer [ctb],
   Christoph Ritschel [aut],
   Carola Detring [ctb],
   Sarah Joedicke [ctb]
@@ -30,6 +32,6 @@ URL: https://gitlab.met.fu-berlin.de/Rpackages/idf_package
 LazyData: true
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2021-01-15 09:59:13 UTC; janaulrich
+Packaged: 2021-04-09 09:22:57 UTC; janaulrich
 Repository: CRAN
-Date/Publication: 2021-01-15 10:20:05 UTC
+Date/Publication: 2021-04-09 09:40:02 UTC

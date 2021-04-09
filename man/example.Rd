@@ -22,6 +22,8 @@ d-GEV parameters used for sampling:
   \item \eqn{\sigma_0 = 2+0.5 cov_1}
   \item \eqn{\xi = 0.5}
   \item \eqn{\theta = 0}
-  \item \eqn{\eta = 0.5}}
+  \item \eqn{\eta = 0.5}
+  \item \eqn{\eta_2 = 0.5}
+  \item \eqn{\tau = 0}}
 }
 \keyword{datasets}

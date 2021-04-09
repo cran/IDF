@@ -4,12 +4,12 @@
 \alias{dgev.d}
 \title{d-GEV probability density function}
 \usage{
-dgev.d(q, mut, sigma0, xi, theta, eta, d, ...)
+dgev.d(q, mut, sigma0, xi, theta, eta, d, eta2 = NULL, tau = 0, ...)
 }
 \arguments{
 \item{q}{vector of quantiles}
 
-\item{mut, sigma0, xi}{numeric value, giving modified location \eqn{\tilde{\mu}}, scale offset \eqn{\tilde{\sigma_0}} and 
+\item{mut, sigma0, xi}{numeric value, giving modified location \eqn{\tilde{\mu}}, scale offset \eqn{\sigma_0} and 
 shape parameter \eqn{\xi}.}
 
 \item{theta}{numeric value, giving duration offset \eqn{\theta} (defining curvature of the IDF curve)}
@@ -17,6 +17,10 @@ shape parameter \eqn{\xi}.}
 \item{eta}{numeric value, giving duration exponent \eqn{\eta} (defining slope of the IDF curve)}
 
 \item{d}{positive numeric value, giving duration}
+
+\item{eta2}{numeric value, giving a second duration exponent \eqn{\eta_2} (needed for multiscaling). Default: NULL, treated as \eqn{\eta_2=\eta}.}
+
+\item{tau}{numeric value, giving intensity offset \eqn{\tau} (defining flattening of the IDF curve). Default: \eqn{\tau=0}.}
 
 \item{...}{additional parameters passed to \code{\link[evd]{dgev}}}
 }

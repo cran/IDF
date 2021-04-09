@@ -4,18 +4,22 @@
 \alias{qgev.d}
 \title{d-GEV quantile function}
 \usage{
-qgev.d(p, mut, sigma0, xi, theta, eta, d, ...)
+qgev.d(p, mut, sigma0, xi, theta, eta, d, tau = 0, eta2 = NULL, ...)
 }
 \arguments{
 \item{p}{vector of probabilities}
 
 \item{mut, sigma0, xi}{numeric value, giving modified location, modified scale and shape parameter}
 
-\item{theta}{numeric value, giving duration offset (defining curvature of the IDF curve)}
+\item{theta}{numeric value, giving duration offset (defining curvature of the IDF curve for short durations)}
 
 \item{eta}{numeric value, giving duration exponent (defining slope of the IDF curve)}
 
 \item{d}{positive numeric value, giving duration}
+
+\item{tau}{numeric value, giving intensity offset \eqn{\tau} (defining flattening of the IDF curve). Default: \eqn{\tau=0}.}
+
+\item{eta2}{numeric value, giving a second duration exponent \eqn{\eta_2} (needed for multiscaling). Default: NULL, treated as \eqn{\eta_2=\eta}.}
 
 \item{...}{additional parameters passed to \code{\link[evd]{qgev}}}
 }
@@ -38,7 +42,7 @@ For details on the d-GEV and the parameter definitions, see \link{IDF-package}.
 \examples{
 p <- c(0.5,0.9,0.99)
 # calulate quantiles for one duration
-qgev.d(p=p,mut=4,sigma0=2,xi=0,theta=0.1,eta=0.3,d=1)
+qgev.d(p=p,mut=4,sigma0=2,xi=0,theta=0.1,eta=0.3, d=1)
 
 # calculate quantiles for sequence of durations
 ds <- 2^seq(0,4,0.1)

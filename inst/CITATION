@@ -1,0 +1,14 @@
+citHeader("To cite IDF in publications, please use:")
+
+citEntry(entry = "article",
+  author = "Jana Ulrich and Oscar E. Jurado and Madlen Peter and Marc Scheibel and Henning W. Rust",
+title = "Estimating IDF Curves Consistently over Durations with Spatial Covariates",
+journal = "Water",
+volume = "12",
+year = "2020",
+number = "11:3119",
+url = "https://www.mdpi.com/2073-4441/12/11/3119",
+issn = "2073-4441",
+doi = "10.3390/w12113119",
+textVersion = "Ulrich, J.; Jurado, O.E.; Peter, M.; Scheibel, M.; Rust, H.W. Estimating IDF Curves Consistently over Durations with Spatial Covariates. Water 2020, 12, 3119. https://doi.org/10.3390/w12113119"
+)

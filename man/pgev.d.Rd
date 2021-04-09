@@ -4,7 +4,7 @@
 \alias{pgev.d}
 \title{d-GEV cumulative distribution function}
 \usage{
-pgev.d(q, mut, sigma0, xi, theta, eta, d, ...)
+pgev.d(q, mut, sigma0, xi, theta, eta, d, tau = 0, eta2 = NULL, ...)
 }
 \arguments{
 \item{q}{vector of quantiles}
@@ -16,6 +16,10 @@ pgev.d(q, mut, sigma0, xi, theta, eta, d, ...)
 \item{eta}{numeric value, giving duration exponent (defining slope of the IDF curve)}
 
 \item{d}{positive numeric value, giving duration}
+
+\item{tau}{numeric value, giving intensity offset \eqn{\tau} (defining flattening of the IDF curve). Default: \eqn{\tau=0}.}
+
+\item{eta2}{numeric value, giving a second duration exponent \eqn{\eta_2} (needed for multiscaling). Default: NULL, treated as \eqn{\eta_2=\eta}.}
 
 \item{...}{additional parameters passed to \code{\link[evd]{pgev}}}
 }

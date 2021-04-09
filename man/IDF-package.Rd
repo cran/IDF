@@ -25,6 +25,11 @@ modified location parameter \eqn{\tilde{\mu}=\mu/\sigma(d)\in R}
 and shape parameter \eqn{\xi\in R}, \eqn{\xi\neq 0}.
 The parameters \eqn{\theta \leq 0} and \eqn{0<\eta<1} are duration offset and duration exponent
 and describe the slope and curvature in the resulting IDF curves, respectively.
+\item The dependence of scale and location parameter on duration, \eqn{\sigma(d)} and \eqn{\mu(d)}, can be extended by multiscaling
+and flattening, if requested. Multiscaling introduces a second duration exponent \eqn{\eta_2}, enabling the model to change slope
+linearly with return period. Flattening adds a parameter \eqn{\tau}, that flattens the IDF curve for long durations:
+\deqn{\sigma(x)=\sigma_0(d+\theta)^{-\eta_2}+\tau }
+\deqn{\mu(x)=\tilde{\mu}(\sigma_0(d+\theta)^{-\eta_1}+\tau)}
 \item A useful introduction to \strong{Maximum Likelihood Estimation} for fitting for the
 generalized extreme value distribution (GEV) is provided by Coles (2001). It should be noted, however, that this method uses
 the assumption that block maxima (of different durations or stations) are independent of each other.

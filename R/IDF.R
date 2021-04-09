@@ -27,6 +27,11 @@
 #' and shape parameter \eqn{\xi\in R}, \eqn{\xi\neq 0}.
 #' The parameters \eqn{\theta \leq 0} and \eqn{0<\eta<1} are duration offset and duration exponent
 #' and describe the slope and curvature in the resulting IDF curves, respectively.
+#' * The dependence of scale and location parameter on duration, \eqn{\sigma(d)} and \eqn{\mu(d)}, can be extended by multiscaling
+#' and flattening, if requested. Multiscaling introduces a second duration exponent \eqn{\eta_2}, enabling the model to change slope
+#' linearly with return period. Flattening adds a parameter \eqn{\tau}, that flattens the IDF curve for long durations:
+#' \deqn{\sigma(x)=\sigma_0(d+\theta)^{-\eta_2}+\tau }
+#' \deqn{\mu(x)=\tilde{\mu}(\sigma_0(d+\theta)^{-\eta_1}+\tau)}
 #' * A useful introduction to __Maximum Likelihood Estimation__ for fitting for the 
 #' generalized extreme value distribution (GEV) is provided by Coles (2001). It should be noted, however, that this method uses
 #' the assumption that block maxima (of different durations or stations) are independent of each other. 
@@ -176,9 +181,12 @@ NULL
           return(df) # maxima for single durations
         }
         # call function 1 in lapply to aggregate over all durations at single station
-        clust <- parallel::makeCluster(cl)
-        data.agg <- parallel::parLapply(cl = clust,ds,agg.ts)  
-        parallel::stopCluster(clust)
+        if(cl>1){
+          clust <- parallel::makeCluster(cl,type='FORK')
+          data.agg <- parallel::parLapply(cl = clust,ds,agg.ts)  
+          parallel::stopCluster(clust)
+        }else{data.agg <-lapply(ds,agg.ts)}
+
         df <- do.call(rbind,data.agg)
         return(df) # maxima for all durations at one station
       }
@@ -222,13 +230,11 @@ NULL
 IDF.plot <- function(durations,fitparams,probs=c(0.5,0.9,0.99),
                      cols=4:2,add=FALSE,
                      legend=TRUE,...){
-  
-  # if cols is to short, make longer    
+  # if cols is too short, make longer    
   if(length(cols)!=length(probs))cols <- rep_len(cols,length.out=length(probs))
-  
   ## calculate IDF values for given probability and durations
   qs <- lapply(durations,qgev.d,p=probs,mut=fitparams[1],sigma0=fitparams[2],xi=fitparams[3],
-         theta=fitparams[4],eta=fitparams[5])
+         theta=fitparams[4],eta=fitparams[5], eta2=fitparams[6], tau=fitparams[7])
   idf.array <- matrix(unlist(qs),length(probs),length(durations)) # array[probs,durs]
   if(!add){ #new plot
     ## initialize plot window
@@ -246,7 +252,6 @@ IDF.plot <- function(durations,fitparams,probs=c(0.5,0.9,0.99),
     # empty plot
     plot(NA,xlim=xlim,ylim=ylim,xlab="Duration [h]",ylab="Intensity [mm/h]",log="xy",main=main)
   }
-  
   ## plot IDF curves
   for(i in 1:length(probs)){
     lines(durations,idf.array[i,],col=cols[i],...)

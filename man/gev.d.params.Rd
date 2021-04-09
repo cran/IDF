@@ -12,11 +12,11 @@ gev.d.params(fit, ydat = NULL)
 \item{ydat}{A matrix containing the covariates in the same order as used in \code{gev.d.fit}.}
 }
 \value{
-data.frame containing mu_tilde, sigma0, xi, theta, eta (or mu, sigma, xi for gev.fit objects)
+data.frame containing mu_tilde, sigma0, xi, theta, eta, eta2, tau (or mu, sigma, xi for gev.fit objects)
 }
 \description{
-function to calculate mut, sigma0, xi, theta, eta
-(modified location, scale offset, shape, duration offset, duration exponent)
+function to calculate mut, sigma0, xi, theta, eta, eta2, tau
+(modified location, scale offset, shape, duration offset, duration exponent, second duration exponent, intensity offset)
 from results of \code{\link{gev.d.fit}} with covariates or link functions other than identity.
 }
 \examples{

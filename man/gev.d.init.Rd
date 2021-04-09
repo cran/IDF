@@ -14,7 +14,7 @@ gev.d.init(xdat, ds, link)
 \item{link}{list of 5, link functions for parameters, created with \code{\link{make.link}}}
 }
 \value{
-list of initial values for mu_tilde, sigma_0, xi, eta
+list of initial values for mu_tilde, sigma_0, xi, theta, eta, eta2, tau
 }
 \description{
 obtain initial values by fitting every duration separately

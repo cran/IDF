@@ -13,13 +13,19 @@ gev.d.fit(
   xil = NULL,
   thetal = NULL,
   etal = NULL,
+  taul = NULL,
+  eta2l = NULL,
   mutlink = make.link("identity"),
   sigma0link = make.link("identity"),
   xilink = make.link("identity"),
   thetalink = make.link("identity"),
   etalink = make.link("identity"),
-  init.vals = as.list(rep(NA, 5)),
+  taulink = make.link("identity"),
+  eta2link = make.link("identity"),
+  init.vals = NULL,
   theta_zero = FALSE,
+  tau_zero = TRUE,
+  eta2_zero = TRUE,
   show = TRUE,
   method = "Nelder-Mead",
   maxit = 10000,
@@ -37,22 +43,26 @@ This can be obtained from \code{\link{IDF.agg}}.}
 (or NULL (the default) for stationary fitting). The number of rows should be the same as the
 length of xdat.}
 
-\item{mutl, sigma0l, xil, thetal, etal}{Numeric vectors of integers, giving the columns of ydat that contain
+\item{mutl, sigma0l, xil, thetal, etal, taul, eta2l}{Numeric vectors of integers, giving the columns of ydat that contain
 covariates for generalized linear modeling of the parameters (or NULL (the default)
 if the corresponding parameter is stationary).
 Parameters are: modified location, scale offset, shape, duration offset, duration exponent, respectively.}
 
-\item{mutlink, sigma0link, xilink, thetalink, etalink}{Link functions for generalized linear
+\item{mutlink, sigma0link, xilink, thetalink, etalink, eta2link, taulink}{Link functions for generalized linear
 modeling of the parameters, created with \code{\link{make.link}}. The default is \code{make.link("identity")}.}
 
-\item{init.vals}{list of length 5, giving initial values for all or some parameters
-(order: mut, sigma0, xi, theta, eta). If as.list(rep(NA,5)) (the default) is given, initial parameters are obtained
+\item{init.vals}{list, giving initial values for all or some parameters
+(order: mut, sigma0, xi, theta, eta, eta2, tau). If one of those parameters shall not be used (see theta_zero, eta2_zero, tau_zero),
+the number of parameters has to be reduced accordingly. If some or all given values in init.vals are NA or 
+no init.vals at all is declared (the default), initial parameters are obtained
 internally by fitting the GEV separately for each duration and applying a linear model to obtain the
 duration dependency of the location and shape parameter.
 Initial values for covariate parameters are assumed as 0 if not given.}
 
-\item{theta_zero}{Logical value, indicating if theta should be estimated (FALSE, the default) or
+\item{theta_zero}{Logical value, indicating whether theta should be estimated (FALSE, the default) or
 should stay zero.}
+
+\item{tau_zero, eta2_zero}{Logical values, indicating whether tau,eta2 should be estimated (TRUE, the default).}
 
 \item{show}{Logical; if TRUE (the default), print details of the fit.}
 
@@ -69,10 +79,10 @@ If \code{show} is TRUE, then assuming that successful convergence is indicated,
 the components nllh, mle and se are always printed.
 \item{nllh}{single numeric giving the negative log-likelihood value}
 \item{mle}{numeric vector giving the MLE's for the modified location, scale_0, shape,
-duration offset and duration exponent, resp.}
+duration offset and duration exponent, resp. If requested, contains also second duration exponent and intensity-offset}
 \item{se}{numeric vector giving the standard errors for the MLE's (in the same order)}
 \item{trans}{A logical indicator for a non-stationary fit.}
-\item{model}{A list with components mutl, sigma0l, xil, thetal and etal.}
+\item{model}{A list with components mutl, sigma0l, xil, thetal and etal. If requested, contains also eta2l and taul}
 \item{link}{A character vector giving inverse link functions.}
 \item{conv}{The convergence code, taken from the list returned by \code{\link{optim}}.
 A zero indicates successful convergence.}
@@ -99,6 +109,8 @@ For details on the d-GEV and the parameter definitions, see \link{IDF-package}.
 # xi = 0.5
 # theta = 0
 # eta = 0.5
+# eta2 = 0.5
+# tau = 0
 
 data('example',package ='IDF')
 

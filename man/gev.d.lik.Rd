@@ -4,14 +4,25 @@
 \alias{gev.d.lik}
 \title{d-GEV Likelihood}
 \usage{
-gev.d.lik(xdat, ds, mut, sigma0, xi, theta, eta, log = FALSE)
+gev.d.lik(
+  xdat,
+  ds,
+  mut,
+  sigma0,
+  xi,
+  theta,
+  eta,
+  log = FALSE,
+  tau = 0,
+  eta2 = NULL
+)
 }
 \arguments{
 \item{xdat}{numeric vector containing observations}
 
 \item{ds}{numeric vector containing corresponding durations (1/60 corresponds to 1 minute, 1 corresponds to 1 hour)}
 
-\item{mut, sigma0, xi, theta, eta}{numeric vectors containing corresponding estimates for each of the parameters}
+\item{mut, sigma0, xi, theta, eta, eta2, tau}{numeric vectors containing corresponding estimates for each of the parameters}
 
 \item{log}{Logical; if TRUE, the log likelihood is returned.}
 }
