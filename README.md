@@ -4,7 +4,6 @@
 # IDF
 
 <!-- badges: start -->
-
 <!-- badges: end -->
 
 Intensity-duration-frequency (IDF) curves are a widely used
@@ -39,9 +38,7 @@ devtools::install_git("https://gitlab.met.fu-berlin.de/Rpackages/idf_package")
 Here are a few examples to illustrate the order in which the functions
 are intended to be used.
 
-  - Step 0: sample 20 years of example hourly ‘precipitation’ data
-
-<!-- end list -->
+-   Step 0: sample 20 years of example hourly ‘precipitation’ data
 
 ``` r
 set.seed(999)
@@ -50,9 +47,7 @@ sample.precip <- rgamma(n = length(dates), shape = 0.05, rate = 0.4)
 precip.df <- data.frame(date=dates,RR=sample.precip)
 ```
 
-  - Step 1: get annual maxima
-
-<!-- end list -->
+-   Step 1: get annual maxima
 
 ``` r
 library(IDF)
@@ -65,9 +60,7 @@ plot(ann.max$ds,ann.max$xdat,log='xy',xlab = 'Duration [h]',ylab='Intensity [mm/
 
 <img src="man/figures/README-annualmax-1.png" width="100%" />
 
-  - Step 2: fit d-GEV to annual maxima
-
-<!-- end list -->
+-   Step 2: fit d-GEV to annual maxima
 
 ``` r
 fit <- gev.d.fit(xdat = ann.max$xdat,ds = ann.max$ds,sigma0link = make.link('log'))
@@ -81,9 +74,9 @@ fit <- gev.d.fit(xdat = ann.max$xdat,ds = ann.max$ds,sigma0link = make.link('log
 #> [1]  6.478887e+00  3.817184e-01 -1.833254e-02  2.843666e-09  7.922310e-01
 #> 
 #> $se
-#> [1] 4.018974e-01 6.677404e-02 4.931317e-02 2.000063e-06 1.141522e-02
+#> [1] 0.25207846 0.02370771 0.04861600        NaN 0.01008561
 # checking the fit 
-gev.d.diag(fit,pch=1,)
+gev.d.diag(fit,pch=1,ci=TRUE)
 ```
 
 <img src="man/figures/README-fit-1.png" width="100%" />
@@ -92,8 +85,8 @@ gev.d.diag(fit,pch=1,)
 # parameter estimates 
 params <- gev.d.params(fit)
 print(params)
-#>        mut sigma0          xi        theta      eta     eta2 tau
-#> 1 6.478887 1.4648 -0.01833254 2.843666e-09 0.792231 0.792231   0
+#>        mut sigma0          xi        theta      eta eta2 tau
+#> 1 6.478887 1.4648 -0.01833254 2.843666e-09 0.792231    0   0
 
 # plotting the probability density for a single duration 
 q.min <- floor(min(ann.max$xdat[ann.max$ds%in%1:2]))
@@ -112,9 +105,7 @@ legend('topright',col=1:2,lwd=1,legend = paste('d=',1:2,'h'),title = 'Duration')
 
 <img src="man/figures/README-fit-2.png" width="100%" />
 
-  - Step 3: adding the IDF-curves to the data
-
-<!-- end list -->
+-   Step 3: adding the IDF-curves to the data
 
 ``` r
 plot(ann.max$ds,ann.max$xdat,log='xy',xlab = 'Duration [h]',ylab='Intensity [mm/h]')
@@ -126,60 +117,49 @@ IDF.plot(durations,params,add=TRUE)
 ## IDF Features
 
 This Example depicts the different features that can be used to model
-the IDF curves (submitted for publication: Fauer et al. An Extended
-Model in Estimating Consistent Quantiles for
-Intensity-Duration-Frequency Curves, 2020). Here we assume, that the
+the IDF curves, see Fauer et. al (2021,
+<https://doi.org/10.5194/hess-25-6479-2021>). Here we assume, that the
 block maxima of each duration can be modeled with the GEV distribution
-(![\\xi\\neq0](https://latex.codecogs.com/png.latex?%5Cxi%5Cneq0
-"\\xi\\neq0")):   
-![G(z;\\mu,\\sigma,\\xi)=\\exp \\left\\lbrace -\\left\[ &#10;1+\\xi
-\\left( \\frac{z-\\mu}{\\sigma} \\right)&#10;\\right\]^{-1/\\xi}
-\\right\\rbrace,](https://latex.codecogs.com/png.latex?G%28z%3B%5Cmu%2C%5Csigma%2C%5Cxi%29%3D%5Cexp%20%5Cleft%5Clbrace%20-%5Cleft%5B%20%0A1%2B%5Cxi%20%5Cleft%28%20%5Cfrac%7Bz-%5Cmu%7D%7B%5Csigma%7D%20%5Cright%29%0A%5Cright%5D%5E%7B-1%2F%5Cxi%7D%20%5Cright%5Crbrace%2C
-"G(z;\\mu,\\sigma,\\xi)=\\exp \\left\\lbrace -\\left[ 
+(![\\xi\\neq0](https://latex.codecogs.com/png.latex?%5Cxi%5Cneq0 "\xi\neq0")):
+
+![G(z;\\mu,\\sigma,\\xi)=\\exp \\left\\lbrace -\\left\[ 
 1+\\xi \\left( \\frac{z-\\mu}{\\sigma} \\right)
-\\right]^{-1/\\xi} \\right\\rbrace,")  
+\\right\]^{-1/\\xi} \\right\\rbrace,](https://latex.codecogs.com/png.latex?G%28z%3B%5Cmu%2C%5Csigma%2C%5Cxi%29%3D%5Cexp%20%5Cleft%5Clbrace%20-%5Cleft%5B%20%0A1%2B%5Cxi%20%5Cleft%28%20%5Cfrac%7Bz-%5Cmu%7D%7B%5Csigma%7D%20%5Cright%29%0A%5Cright%5D%5E%7B-1%2F%5Cxi%7D%20%5Cright%5Crbrace%2C "G(z;\mu,\sigma,\xi)=\exp \left\lbrace -\left[ 
+1+\xi \left( \frac{z-\mu}{\sigma} \right)
+\right]^{-1/\xi} \right\rbrace,")
 
 where the GEV parameters depend on duration according to:
 
-  
-![&#10;\\sigma(d)=\\sigma\_0(d+\\theta)^{-\\eta\_2}+\\tau,
-\\\\&#10;\\mu(d) =
-\\tilde{\\mu}\\cdot\\sigma\_0(d+\\theta)^{-\\eta}+\\tau,
-\\\\&#10;\\xi(d) = \\text{const.}
-&#10;](https://latex.codecogs.com/png.latex?%0A%5Csigma%28d%29%3D%5Csigma_0%28d%2B%5Ctheta%29%5E%7B-%5Ceta_2%7D%2B%5Ctau%2C%20%5C%5C%0A%5Cmu%28d%29%20%3D%20%5Ctilde%7B%5Cmu%7D%5Ccdot%5Csigma_0%28d%2B%5Ctheta%29%5E%7B-%5Ceta%7D%2B%5Ctau%2C%20%20%5C%5C%0A%5Cxi%28d%29%20%3D%20%5Ctext%7Bconst.%7D%20%0A
-"
-\\sigma(d)=\\sigma_0(d+\\theta)^{-\\eta_2}+\\tau, \\\\
-\\mu(d) = \\tilde{\\mu}\\cdot\\sigma_0(d+\\theta)^{-\\eta}+\\tau,  \\\\
+![
+\\sigma(d)=\\sigma\_0(d+\\theta)^{-\\eta\_2}+\\tau, \\\\
+\\mu(d) = \\tilde{\\mu}\\cdot\\sigma\_0(d+\\theta)^{-\\eta}+\\tau,  \\\\
 \\xi(d) = \\text{const.} 
-")  
+](https://latex.codecogs.com/png.latex?%0A%5Csigma%28d%29%3D%5Csigma_0%28d%2B%5Ctheta%29%5E%7B-%5Ceta_2%7D%2B%5Ctau%2C%20%5C%5C%0A%5Cmu%28d%29%20%3D%20%5Ctilde%7B%5Cmu%7D%5Ccdot%5Csigma_0%28d%2B%5Ctheta%29%5E%7B-%5Ceta%7D%2B%5Ctau%2C%20%20%5C%5C%0A%5Cxi%28d%29%20%3D%20%5Ctext%7Bconst.%7D%20%0A "
+\sigma(d)=\sigma_0(d+\theta)^{-\eta_2}+\tau, \\
+\mu(d) = \tilde{\mu}\cdot\sigma_0(d+\theta)^{-\eta}+\tau,  \\
+\xi(d) = \text{const.} 
+")
 
 The function `gev.d.fit` provides the options:
 
-  - `theta_zero = TRUE` ![\\theta
-    = 0](https://latex.codecogs.com/png.latex?%5Ctheta%20%3D%200
-    "\\theta = 0")
-  - `eta2_zero = TRUE` (default) ![\\eta\_2 =
-    \\eta](https://latex.codecogs.com/png.latex?%5Ceta_2%20%3D%20%5Ceta
-    "\\eta_2 = \\eta")
-  - `tau_zero = TRUE` (default) ![\\tau
-    = 0](https://latex.codecogs.com/png.latex?%5Ctau%20%3D%200
-    "\\tau = 0")
+-   `theta_zero = TRUE`
+    ![\\theta = 0](https://latex.codecogs.com/png.latex?%5Ctheta%20%3D%200 "\theta = 0")
+-   `eta2_zero = TRUE` (default)
+    ![\\eta\_2 = \\eta](https://latex.codecogs.com/png.latex?%5Ceta_2%20%3D%20%5Ceta "\eta_2 = \eta")
+-   `tau_zero = TRUE` (default)
+    ![\\tau = 0](https://latex.codecogs.com/png.latex?%5Ctau%20%3D%200 "\tau = 0")
 
 resulting in the following features for IDF-curves:
 
-  - simple scaling: using only parameters ![\\tilde{\\mu}, \\sigma\_0,
-    \\xi,
-    \\eta](https://latex.codecogs.com/png.latex?%5Ctilde%7B%5Cmu%7D%2C%20%5Csigma_0%2C%20%5Cxi%2C%20%5Ceta
-    "\\tilde{\\mu}, \\sigma_0, \\xi, \\eta")
-  - curvature for small durations: allowing ![\\theta
-    \\neq 0](https://latex.codecogs.com/png.latex?%5Ctheta%20%5Cneq%200
-    "\\theta \\neq 0") (default)
-  - multi-scaling: allowing ![\\eta\_2 \\neq
-    \\eta](https://latex.codecogs.com/png.latex?%5Ceta_2%20%5Cneq%20%5Ceta
-    "\\eta_2 \\neq \\eta")
-  - flattening for long durations: allowing ![\\tau
-    \\neq 0](https://latex.codecogs.com/png.latex?%5Ctau%20%5Cneq%200
-    "\\tau \\neq 0").
+-   simple scaling: using only parameters
+    ![\\tilde{\\mu}, \\sigma\_0, \\xi, \\eta](https://latex.codecogs.com/png.latex?%5Ctilde%7B%5Cmu%7D%2C%20%5Csigma_0%2C%20%5Cxi%2C%20%5Ceta "\tilde{\mu}, \sigma_0, \xi, \eta")
+-   curvature for small durations: allowing
+    ![\\theta \\neq 0](https://latex.codecogs.com/png.latex?%5Ctheta%20%5Cneq%200 "\theta \neq 0")
+    (default)
+-   multi-scaling: allowing
+    ![\\eta\_2 \\neq \\eta](https://latex.codecogs.com/png.latex?%5Ceta_2%20%5Cneq%20%5Ceta "\eta_2 \neq \eta")
+-   flattening for long durations: allowing
+    ![\\tau \\neq 0](https://latex.codecogs.com/png.latex?%5Ctau%20%5Cneq%200 "\tau \neq 0").
 
 Example:
 
@@ -189,7 +169,7 @@ set.seed(42)
 # durations
 ds <- 1/60*2^(seq(0,13,1))
 # random data for each duration
-xdat <- sapply(ds,rgev.d,n = 20,mut = 2,sigma0 =3,xi = 0.2,theta = 0.1,eta = 0.6,tau = 0.1,eta2 = 0.8)
+xdat <- sapply(ds,rgev.d,n = 20,mut = 2,sigma0 =3,xi = 0.2,theta = 0.1,eta = 0.6,tau = 0.1,eta2 = 0.2)
 # transform to data.frame
 example <- data.frame(xdat=as.numeric(xdat),ds=rep(ds,each=dim(xdat)[1]))
 
@@ -198,10 +178,22 @@ fit.simple <- gev.d.fit(xdat=example$xdat,ds = example$ds,theta_zero = TRUE,show
 fit.theta <- gev.d.fit(xdat=example$xdat,ds = example$ds,show=FALSE)
 fit.eta2 <- gev.d.fit(xdat=example$xdat,ds = example$ds,eta2_zero = FALSE,show=FALSE)
 fit.tau <- gev.d.fit(xdat=example$xdat,ds = example$ds,eta2_zero = FALSE,tau_zero = FALSE,show=FALSE)
+# group fits
+all.fits <- list(simple=fit.simple,curvature=fit.theta,multiscaling=fit.eta2,flattening=fit.tau)
+# compare parameter estimates:
+print(t(sapply(all.fits,gev.d.params)))
+#>              mut      sigma0   xi           theta      eta       eta2     
+#> simple       1.754974 2.897875 -0.004559432 0          0.4978471 0        
+#> curvature    1.782777 3.187756 -0.01039414  0.02949747 0.5376237 0        
+#> multiscaling 1.896368 2.826447 0.1358611    0.03034914 0.4971133 0.1577612
+#> flattening   2.038391 2.712067 0.1469354    0.09235748 0.6237206 0.2642782
+#>              tau      
+#> simple       0        
+#> curvature    0        
+#> multiscaling 0        
+#> flattening   0.1287691
 
 ### compare resulting idf-curves
-# group fits
-all.fits <- list(fit.simple,fit.theta,fit.eta2,fit.tau)
 fit.cols <- c('red','purple','blue','darkgreen')
 fit.labels <- c('simple-scaling','theta!=0','eta2!=eta','tau!=0')
 # plotting probabilities

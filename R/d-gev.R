@@ -10,7 +10,7 @@
 #' shape parameter \eqn{\xi}.
 #' @param theta numeric value, giving duration offset \eqn{\theta} (defining curvature of the IDF curve)
 #' @param eta numeric value, giving duration exponent \eqn{\eta} (defining slope of the IDF curve)
-#' @param eta2 numeric value, giving a second duration exponent \eqn{\eta_2} (needed for multiscaling). Default: NULL, treated as \eqn{\eta_2=\eta}.
+#' @param eta2 numeric value, giving a second duration exponent \eqn{\eta_{2}} (needed for multiscaling). Default: \eqn{\eta_2=0}.
 #' @param tau numeric value, giving intensity offset \eqn{\tau} (defining flattening of the IDF curve). Default: \eqn{\tau=0}.
 #' @param d positive numeric value, giving duration
 #' @param ... additional parameters passed to \code{\link[evd]{dgev}}
@@ -39,8 +39,8 @@
 #'   lines(x,dens[[i]],lty=i)
 #' }
 #' legend('topright',title = 'Duration',legend = 1:4,lty=1:4)
-dgev.d <- function(q,mut,sigma0,xi,theta,eta,d,eta2=NULL,tau=0,...) {
-  if(is.null(eta2)){eta2=eta}
+dgev.d <- function(q,mut,sigma0,xi,theta,eta,d,eta2=0,tau=0,...) {
+  #if(is.null(eta2)){eta2=eta}
   if(any(c(length(mut),length(sigma0),length(xi),length(theta),length(eta),length(eta2),length(tau))>1)){
     message('One of the parameters mut, sigma0, xi, theta, eta, tau is a vector. ',
             'This is not intended and might cause an error.')}
@@ -52,7 +52,7 @@ dgev.d <- function(q,mut,sigma0,xi,theta,eta,d,eta2=NULL,tau=0,...) {
   if(d+theta<=0){return(rep(NA,length(q)))}else{
     
     #sigma.d <-sigma0/(d+theta)^eta+ tau        # old
-    sigma.d <-      sigma0/(d+theta)^eta2 +tau
+    sigma.d <-      sigma0/(d+theta)^(eta+eta2) +tau
     mu.d    <- mut*(sigma0/(d+theta)^eta  +tau)
     
     return(dgev(q,loc=mu.d,scale=sigma.d,shape=xi,...))}
@@ -68,7 +68,7 @@ dgev.d <- function(q,mut,sigma0,xi,theta,eta,d,eta2=NULL,tau=0,...) {
 #' @param mut,sigma0,xi numeric value, giving modified location, modified scale and shape parameter
 #' @param theta numeric value, giving duration offset (defining curvature of the IDF curve)
 #' @param eta numeric value, giving duration exponent (defining slope of the IDF curve)
-#' @param eta2 numeric value, giving a second duration exponent \eqn{\eta_2} (needed for multiscaling). Default: NULL, treated as \eqn{\eta_2=\eta}.
+#' @param eta2 numeric value, giving a second duration exponent \eqn{\eta_{2}} (needed for multiscaling). Default: \eqn{\eta_2=0}.
 #' @param tau numeric value, giving intensity offset \eqn{\tau} (defining flattening of the IDF curve). Default: \eqn{\tau=0}.
 #' @param d positive numeric value, giving duration
 #' @param ... additional parameters passed to \code{\link[evd]{pgev}}
@@ -92,8 +92,8 @@ dgev.d <- function(q,mut,sigma0,xi,theta,eta,d,eta2=NULL,tau=0,...) {
 #' @examples
 #' x <- seq(4,20,0.1)
 #' prob <- pgev.d(q=x,mut=4,sigma0=2,xi=0,theta=0.1,eta=0.1,d=1)
-pgev.d <- function(q,mut,sigma0,xi,theta,eta,d,tau=0,eta2=NULL, ...) {
-  if(is.null(eta2)){eta2=eta}
+pgev.d <- function(q,mut,sigma0,xi,theta,eta,d,tau=0,eta2=0, ...) {
+  #if(is.null(eta2)){eta2=eta}
   if(any(c(length(mut),length(sigma0),length(xi),length(theta),length(eta),length(eta2),length(tau))>1)){
     message('One of the parameters mut, sigma0, xi, theta, eta, tau is a vector. ',
             'This is not intended and might cause an error.')}
@@ -105,7 +105,7 @@ pgev.d <- function(q,mut,sigma0,xi,theta,eta,d,tau=0,eta2=NULL, ...) {
   if(d+theta<=0){return(rep(NA,length(q)))}else{
     
     #sigma.d <-sigma0/(d+theta)^eta+tau # old
-    sigma.d <-      sigma0/(d+theta)^eta2 +tau
+    sigma.d <-      sigma0/(d+theta)^(eta+eta2) +tau
     mu.d    <- mut*(sigma0/(d+theta)^eta  +tau)
     
     return(pgev(q,loc=mu.d,scale=sigma.d,shape=xi,...))}
@@ -121,7 +121,7 @@ pgev.d <- function(q,mut,sigma0,xi,theta,eta,d,tau=0,eta2=NULL, ...) {
 #' @param mut,sigma0,xi numeric value, giving modified location, modified scale and shape parameter
 #' @param theta numeric value, giving duration offset (defining curvature of the IDF curve for short durations)
 #' @param eta numeric value, giving duration exponent (defining slope of the IDF curve)
-#' @param eta2 numeric value, giving a second duration exponent \eqn{\eta_2} (needed for multiscaling). Default: NULL, treated as \eqn{\eta_2=\eta}.
+#' @param eta2 numeric value, giving a second duration exponent \eqn{\eta_{2}} (needed for multiscaling). Default: \eqn{\eta_2=0}.
 #' @param tau numeric value, giving intensity offset \eqn{\tau} (defining flattening of the IDF curve). Default: \eqn{\tau=0}.
 #' @param d positive numeric value, giving duration
 #' @param ... additional parameters passed to \code{\link[evd]{qgev}}
@@ -158,8 +158,8 @@ pgev.d <- function(q,mut,sigma0,xi,theta,eta,d,tau=0,eta2=NULL, ...) {
 #' }
 #' legend('topright',title = 'p-quantile',
 #'        legend = p,lty=1:3,bty = 'n')
-qgev.d <- function(p,mut,sigma0,xi,theta,eta,d,tau=0,eta2=NULL, ...) {
-  if (is.null(eta2)){eta2=eta}
+qgev.d <- function(p,mut,sigma0,xi,theta,eta,d,tau=0,eta2=0, ...) {
+  #if (is.null(eta2)){eta2=eta}
   if(any(c(length(mut),length(sigma0),length(xi),length(theta),length(eta), length(eta2), length(tau))>1)){
     message('One of the parameters mut, sigma0, xi, theta, eta, eta2, tau is a vector. ',
             'This is not intended and might cause an error.')}
@@ -172,7 +172,7 @@ qgev.d <- function(p,mut,sigma0,xi,theta,eta,d,tau=0,eta2=NULL, ...) {
     #sigma.d <-sigma0/(d+theta)^eta
     #sigma.d <-sigma0/(d+theta)^eta+tau
     
-    sigma.d <-      sigma0/(d+theta)^eta2 +tau
+    sigma.d <-      sigma0/(d+theta)^(eta+eta2) +tau
     mu.d    <- mut*(sigma0/(d+theta)^eta  +tau)
     
     return(qgev(p,loc=as.numeric(mu.d)
@@ -192,7 +192,7 @@ qgev.d <- function(p,mut,sigma0,xi,theta,eta,d,tau=0,eta2=NULL, ...) {
 #' @param mut,sigma0,xi numeric value, giving modified location, modified scale and shape parameter
 #' @param theta numeric value, giving duration offset (defining curvature of the IDF curve)
 #' @param eta numeric value, giving duration exponent (defining slope of the IDF curve)
-#' @param eta2 numeric value, giving a second duration exponent \eqn{\eta_2} (needed for multiscaling). Default: NULL, treated as \eqn{\eta_2=\eta}.
+#' @param eta2 numeric value, giving a second duration exponent \eqn{\eta_{2}} (needed for multiscaling). Default: \eqn{\eta_2=0}.
 #' @param tau numeric value, giving intensity offset \eqn{\tau} (defining flattening of the IDF curve). Default: \eqn{\tau=0}.
 #' @param d positive numeric value, giving duration
 #' 
@@ -220,8 +220,8 @@ qgev.d <- function(p,mut,sigma0,xi,theta,eta,d,tau=0,eta2=NULL, ...) {
 #' hist(samp[[2]],breaks = 10,add=TRUE,col=rgb(0,0,1,0.5),freq = FALSE)
 #' legend('topright',fill = c(rgb(1,0,0,0.5),rgb(0,0,1,0.5)),
 #' legend = paste('d=',1:2,'h'),title = 'Duration')
-rgev.d <- function(n,mut,sigma0,xi,theta,eta,d,tau=0,eta2=NULL) {
-  if (is.null(eta2)){eta2=eta}
+rgev.d <- function(n,mut,sigma0,xi,theta,eta,d,tau=0,eta2=0) {
+  #if (is.null(eta2)){eta2=eta}
   if(any(c(length(mut),length(sigma0),length(xi),length(theta),length(eta),length(eta2),length(tau))>1)){
     message('One of the parameters mut, sigma0, xi, theta, eta, tau is a vector. ',
             'This is not intended and might cause an error.')}
@@ -233,7 +233,7 @@ rgev.d <- function(n,mut,sigma0,xi,theta,eta,d,tau=0,eta2=NULL) {
   if(d+theta<=0){return(rep(NA,n))}else{
     
     #sigma.d <-sigma0/(d+theta)^eta+tau # old
-    sigma.d <-      sigma0/(d+theta)^eta2 +tau
+    sigma.d <-      sigma0/(d+theta)^(eta+eta2) +tau
     mu.d    <- mut*(sigma0/(d+theta)^eta  +tau)
     
     return(rgev(n,loc=mu.d,scale=sigma.d,shape=xi))}

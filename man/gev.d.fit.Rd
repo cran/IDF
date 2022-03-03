@@ -83,7 +83,7 @@ duration offset and duration exponent, resp. If requested, contains also second 
 \item{se}{numeric vector giving the standard errors for the MLE's (in the same order)}
 \item{trans}{A logical indicator for a non-stationary fit.}
 \item{model}{A list with components mutl, sigma0l, xil, thetal and etal. If requested, contains also eta2l and taul}
-\item{link}{A character vector giving inverse link functions.}
+\item{link}{A character vector giving link functions.}
 \item{conv}{The convergence code, taken from the list returned by \code{\link{optim}}.
 A zero indicates successful convergence.}
 \item{data}{data is standardized to standard Gumbel.}
@@ -109,7 +109,7 @@ For details on the d-GEV and the parameter definitions, see \link{IDF-package}.
 # xi = 0.5
 # theta = 0
 # eta = 0.5
-# eta2 = 0.5
+# eta2 = 0
 # tau = 0
 
 data('example',package ='IDF')

@@ -1,3 +1,20 @@
+# IDF 2.1.1
+
+## New features
+The function gev.d.diag, which creates diagnostic plots, now provides the option to 
+add (95% bootstrapped) confidence intervals to the plot.
+
+We implemented the analytic likelihood gradient into the function gev.d.fit. When using the 
+optimization method 'BFGS', it is now possible to obtain estimates, comparable to those of the 
+method 'Nelder-Mead' (default), but with considerably reduced computation time. This is especially 
+recommended, when using a model with covariates.
+
+## Bug fixes
+We fixed a bug, occurring when using different plotting symbols for different durations in the function gev.d.diag.
+
+We changed the definition of the parameter eta2 in the documentation, so that it is in accordance 
+with the corresponding publication.
+
 # IDF 2.1.0
 
 ## New features:

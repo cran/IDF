@@ -4,7 +4,7 @@
 \alias{qgev.d}
 \title{d-GEV quantile function}
 \usage{
-qgev.d(p, mut, sigma0, xi, theta, eta, d, tau = 0, eta2 = NULL, ...)
+qgev.d(p, mut, sigma0, xi, theta, eta, d, tau = 0, eta2 = 0, ...)
 }
 \arguments{
 \item{p}{vector of probabilities}
@@ -19,7 +19,7 @@ qgev.d(p, mut, sigma0, xi, theta, eta, d, tau = 0, eta2 = NULL, ...)
 
 \item{tau}{numeric value, giving intensity offset \eqn{\tau} (defining flattening of the IDF curve). Default: \eqn{\tau=0}.}
 
-\item{eta2}{numeric value, giving a second duration exponent \eqn{\eta_2} (needed for multiscaling). Default: NULL, treated as \eqn{\eta_2=\eta}.}
+\item{eta2}{numeric value, giving a second duration exponent \eqn{\eta_{2}} (needed for multiscaling). Default: \eqn{\eta_2=0}.}
 
 \item{...}{additional parameters passed to \code{\link[evd]{qgev}}}
 }

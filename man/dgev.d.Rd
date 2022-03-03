@@ -4,7 +4,7 @@
 \alias{dgev.d}
 \title{d-GEV probability density function}
 \usage{
-dgev.d(q, mut, sigma0, xi, theta, eta, d, eta2 = NULL, tau = 0, ...)
+dgev.d(q, mut, sigma0, xi, theta, eta, d, eta2 = 0, tau = 0, ...)
 }
 \arguments{
 \item{q}{vector of quantiles}
@@ -18,7 +18,7 @@ shape parameter \eqn{\xi}.}
 
 \item{d}{positive numeric value, giving duration}
 
-\item{eta2}{numeric value, giving a second duration exponent \eqn{\eta_2} (needed for multiscaling). Default: NULL, treated as \eqn{\eta_2=\eta}.}
+\item{eta2}{numeric value, giving a second duration exponent \eqn{\eta_{2}} (needed for multiscaling). Default: \eqn{\eta_2=0}.}
 
 \item{tau}{numeric value, giving intensity offset \eqn{\tau} (defining flattening of the IDF curve). Default: \eqn{\tau=0}.}
 

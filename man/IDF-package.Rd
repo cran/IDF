@@ -28,7 +28,7 @@ and describe the slope and curvature in the resulting IDF curves, respectively.
 \item The dependence of scale and location parameter on duration, \eqn{\sigma(d)} and \eqn{\mu(d)}, can be extended by multiscaling
 and flattening, if requested. Multiscaling introduces a second duration exponent \eqn{\eta_2}, enabling the model to change slope
 linearly with return period. Flattening adds a parameter \eqn{\tau}, that flattens the IDF curve for long durations:
-\deqn{\sigma(x)=\sigma_0(d+\theta)^{-\eta_2}+\tau }
+\deqn{\sigma(x)=\sigma_0(d+\theta)^{-(\eta+\eta_2)}+\tau }
 \deqn{\mu(x)=\tilde{\mu}(\sigma_0(d+\theta)^{-\eta_1}+\tau)}
 \item A useful introduction to \strong{Maximum Likelihood Estimation} for fitting for the
 generalized extreme value distribution (GEV) is provided by Coles (2001). It should be noted, however, that this method uses

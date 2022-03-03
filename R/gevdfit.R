@@ -48,7 +48,7 @@
 #' \item{se}{numeric vector giving the standard errors for the MLE's (in the same order)}
 #' \item{trans}{A logical indicator for a non-stationary fit.}
 #' \item{model}{A list with components mutl, sigma0l, xil, thetal and etal. If requested, contains also eta2l and taul}
-#' \item{link}{A character vector giving inverse link functions.}
+#' \item{link}{A character vector giving link functions.}
 #' \item{conv}{The convergence code, taken from the list returned by \code{\link{optim}}.
 #' A zero indicates successful convergence.}
 #' \item{data}{data is standardized to standard Gumbel.}
@@ -70,7 +70,7 @@
 #' # xi = 0.5
 #' # theta = 0
 #' # eta = 0.5
-#' # eta2 = 0.5
+#' # eta2 = 0
 #' # tau = 0
 #'
 #' data('example',package ='IDF')
@@ -78,12 +78,11 @@
 #' gev.d.fit(xdat=example$dat,ds = example$d,ydat=as.matrix(example[,c('cov1','cov2')])
 #' ,mutl=c(1,2),sigma0l=1)
 
-gev.d.fit<-
-  function(xdat, ds, ydat = NULL, mutl = NULL, sigma0l = NULL, xil = NULL, thetal = NULL, etal = NULL, taul = NULL, eta2l = NULL,
+gev.d.fit <- function(xdat, ds, ydat = NULL, mutl = NULL, sigma0l = NULL, xil = NULL, thetal = NULL, etal = NULL, taul = NULL, eta2l = NULL,
            mutlink = make.link("identity"), sigma0link = make.link("identity"), xilink = make.link("identity"),
            thetalink = make.link("identity"), etalink = make.link("identity"), taulink = make.link("identity"), eta2link = make.link("identity"),
            init.vals = NULL, theta_zero = FALSE, tau_zero=TRUE, eta2_zero=TRUE,
-           show = TRUE, method = "Nelder-Mead", maxit = 10000, ...)
+           show = TRUE, method = "Nelder-Mead", maxit = 10000,...)
   {
     if (length(xdat) != length(ds)) {
       stop(paste0('The length of xdat is ',length(xdat),', but the length of ds is ',length(ds),'.'))
@@ -118,7 +117,7 @@ gev.d.fit<-
     if(length(init.vals)!=init.necessary.length | !is.list(init.vals)) {
       print(paste0('Parameter init.vals is not used, because it is no list of length ',init.necessary.length,'.'))
       init.vals <- gev.d.init(xdat,ds,z$link)
-      
+
     }else{ # length of given values is correct
 
       # name given initial values
@@ -128,12 +127,13 @@ gev.d.fit<-
       if (!eta2_zero){names1=c(names1,'eta2')}    # add eta2  (in case)
       if (!tau_zero){names1=c(names1,'tau')}      # add tau   (in case)
       names(init.vals) <- names1
+      
       # add missing initial value (fixed internal number of parameters: 7)
       if (theta_zero) init.vals$theta = 0
-      if (eta2_zero) init.vals$eta2 = init.vals$eta
+      if (eta2_zero) init.vals$eta2 = 0#init.vals$eta
       if (tau_zero) init.vals$tau = 0
-      init.vals=init.vals[c("mu","sigma","xi","theta","eta","eta2","tau")]
-      iv=init.vals
+      init.vals = init.vals[c("mu","sigma","xi","theta","eta","eta2","tau")]
+      iv = init.vals
       init.vals = list(mu=iv$mu,sigma=iv$sigma,xi=iv$xi,theta=iv$theta,eta=iv$eta,eta2=iv$eta2,tau=iv$tau)
       
       if(!any(is.na(init.vals))){ #all initial values are given
@@ -152,7 +152,10 @@ gev.d.fit<-
         init.vals <- gev.d.init(xdat,ds,z$link)
       }
     } 
-
+    
+    # transform eta2 to eta2~~eta oriented. the optim function does not need eta2~~0, but eta2~~eta
+    init.vals$eta2=init.vals$eta + init.vals$eta2
+    
     # generate covariates matrices:
     if (is.null(mutl)) { #stationary
       mumat <- as.matrix(rep(1, length(xdat)))
@@ -217,57 +220,99 @@ gev.d.fit<-
     if (!eta2_zero)  {init <- c(init,eta2init)}  # add eta2 init  (in case)
     if (!tau_zero)   {init <- c(init,tauinit)}   # add tau init   (in case)
      
-    # function to calculate neg log-likelihood:
+    # functions to calculate neg log-likelihood and gradient:
     gev.lik <- function(a) {
       # computes neg log lik of d-gev model
       mu <- mutlink$linkinv(mumat %*% (a[1:npmu]))
       sigma <- sigma0link$linkinv(sigmat %*% (a[seq(npmu + 1, length = npsc)]))
       xi <- xilink$linkinv(shmat %*% (a[seq(npmu + npsc + 1, length = npsh)]))
-      # Next line will set the theta likelihood as non-existent in case user requested it. (same for tau)
-      if(!theta_zero) {theta <- thetalink$linkinv(thmat %*% (a[seq(npmu + npsc + npsh + 1, length = npth)]))}
+      theta <-if(!theta_zero){thetalink$linkinv(thmat %*% (a[seq(npmu + npsc + npsh + 1, length = npth)]))}else{0}
       eta <- etalink$linkinv(etmat %*% (a[seq(npmu + npsc + npsh + npth + 1, length = npet)]))
-      if(!eta2_zero)  {eta2  <- eta2link$linkinv( e2mat %*% (a[seq(npmu + npsc + npsh + npth + npet + 1, length = npe2)]))}
-      if(!tau_zero)   {tau   <- taulink$linkinv(  tamat %*% (a[seq(npmu + npsc + npsh + npth + npet + npe2 + 1, length = npta)]))}
+      eta2  <-if(!eta2_zero){eta2link$linkinv( e2mat %*% (a[seq(npmu + npsc + npsh + npth + npet + 1, length = npe2)]))}else{eta}
+      tau   <-if(!tau_zero){taulink$linkinv(  tamat %*% (a[seq(npmu + npsc + npsh + npth + npet + npe2 + 1, length = npta)]))}else{0}
       
-      ifelse(!theta_zero, ds.t <- ds+theta, ds.t <- ds) #Don't use theta if user requested not to have it.
-      #ifelse(!tau_zero,   sigma.d <- sigma/(ds.t^eta)+tau, sigma.d <- sigma/(ds.t^eta)) # don't use tau if user requested not to have it.
-      if (tau_zero){ # don't use tau if user requested not to have it.
-        if (eta2_zero){ # don't use eta2
-          sigma.d <- sigma/(ds.t^eta)
-          mu.d    <- mu*sigma.d
-        }else{ # use eta2 (and no tau)
-          sigma.d <-    sigma/(ds.t^eta2)
-          mu.d    <- mu*sigma/(ds.t^eta)
-        }
-      }else{ # use tau
-        if (eta2_zero){ # don't use eta2 
-          sigma.d <- sigma/(ds.t^eta)+tau
-          mu.d    <- mu*sigma.d
-        }else{ # use eta2 (and tau)
-          sigma.d <-     sigma/(ds.t^eta2)+tau
-          mu.d    <- mu*(sigma/(ds.t^eta)+tau)
-        }
-      }
-      #sigma.d <- sigma/(ds.t^eta) # old
+      ds.t <- ds+theta
+      sigma.d <-     sigma/(ds.t^eta2)+tau
+      mu.d    <- mu*(sigma/(ds.t^eta)+tau)
       
-      y = (xdat - mu.d) / sigma.d # new
-      #y = (xdat - mu*sigma.d) / sigma.d # derivation
-      #y <- xdat/sigma.d - mu # old
-      
+      y = (xdat - mu.d) / sigma.d
       y <- 1 + xi * y
-
-
+      
+      
       if(!theta_zero) {if(any(theta < 0)) {return(10^6)} } # check definition condition for theta
       if(any(eta <= 0) || any(sigma.d <= 0) || any(y <= 0)) return(10^6)
       if(!tau_zero)   {if(any(tau < 0))    {return(10^6)} } # check definition condition for tau.
       if(!eta2_zero) {if(any(eta2 < 0))    {return(10^6)} } # check definition condition for eta2.
       
-      sum(log(sigma.d)) +                 sum(y^(-1/xi)) +              sum(log(y) * (1/xi + 1))
+      return(sum(log(sigma.d)) + sum(y^(-1/xi)) +  sum(log(y) * (1/xi + 1)))
+    }
+    
+    gev.grad <-  function(a){
+      # computes gradient of neg log lik of d-gev model
+      mu <- mutlink$linkinv(mumat %*% (a[1:npmu]))
+      sigma <- sigma0link$linkinv(sigmat %*% (a[seq(npmu + 1, length = npsc)]))
+      xi <- xilink$linkinv(shmat %*% (a[seq(npmu + npsc + 1, length = npsh)]))
+      theta <-if(!theta_zero){thetalink$linkinv(thmat %*% (a[seq(npmu + npsc + npsh + 1, length = npth)]))}else{0}
+      eta <- etalink$linkinv(etmat %*% (a[seq(npmu + npsc + npsh + npth + 1, length = npet)]))
+      eta2  <-if(!eta2_zero){eta2link$linkinv( e2mat %*% (a[seq(npmu + npsc + npsh + npth + npet + 1, length = npe2)]))}else{eta}
+      tau   <-if(!tau_zero){taulink$linkinv(  tamat %*% (a[seq(npmu + npsc + npsh + npth + npet + npe2 + 1, length = npta)]))}else{0}
+      
+      sigma.d <-     sigma/((ds + theta)^eta2) + tau
+      mu.d    <- mu * (sigma/((ds + theta)^eta) + tau)
+      y <-  1 + xi * (xdat - (mu.d))/(sigma.d)
+      
+      
+      dnll.mu.out <- -(xi * (sigma/((ds + theta)^eta) + tau)/(sigma.d)/(y) * (1/xi + 1) + (y)^((-1/xi) - 1) * ((-1/xi) * (xi * (sigma/((ds + theta)^eta) + tau)/(sigma.d))))
+      dnll.mu <- apply(mumat,2,function(x)sum(dnll.mu.out*mutlink$mu.eta(mumat %*% (a[1:npmu]))*x))
+      dnll.sigma.out <- 1/((ds + theta)^eta2)/(sigma.d) - (y)^((-1/xi) - 1) * 
+        ((-1/xi) * (xi * (mu * (1/((ds + theta)^eta)))/(sigma.d) + xi * (xdat - (mu.d)) * (1/((ds + theta)^eta2))/(sigma.d)^2)) - 
+        (xi * (mu * (1/((ds + theta)^eta)))/(sigma.d) + xi * (xdat - (mu.d)) * (1/((ds + theta)^eta2))/(sigma.d)^2)/(y) * (1/xi + 1)
+      dnll.sigma <- apply(sigmat,2,function(x)sum(dnll.sigma.out*sigma0link$mu.eta(sigmat %*% (a[seq(npmu + 1, length = npsc)]))*x))
+      dnll.xi.out <- (y)^((-1/xi) - 1) * ((-1/xi) * ((xdat - (mu.d))/(sigma.d))) + (y)^(-1/xi) * (log((y)) * (1/xi^2)) + 
+        ((xdat - (mu.d))/(sigma.d)/(y) * (1/xi + 1) - log(y) * (1/xi^2))
+      dnll.xi <- apply(shmat,2,function(x)sum(dnll.xi.out*xilink$mu.eta(shmat %*% (a[seq(npmu + npsc + 1, length = npsh)]))*x))
+      if(!theta_zero){
+        dnll.theta.out <- (y)^((-1/xi) - 1) * ((-1/xi) * (xi * (mu * (sigma * ((ds + theta)^(eta - 1) * eta)/((ds + theta)^eta)^2))/
+                                                            (sigma.d) + xi * (xdat - (mu.d)) * (sigma * ((ds + theta)^(eta2 - 1) * eta2)/((ds + theta)^eta2)^2)/(sigma.d)^2)) - 
+          sigma * ((ds + theta)^(eta2 - 1) * eta2)/((ds + theta)^eta2)^2/(sigma.d) + 
+          (xi * (mu * (sigma * ((ds + theta)^(eta - 1) * eta)/((ds + theta)^eta)^2))/(sigma.d) + xi * (xdat - (mu.d)) * 
+             (sigma * ((ds + theta)^(eta2 - 1) * eta2)/((ds + theta)^eta2)^2)/(sigma.d)^2)/(y) * (1/xi + 1)
+        dnll.theta <-  apply(thmat,2,function(x)sum(dnll.theta.out*thetalink$mu.eta(thmat %*% (a[seq(npmu + npsc + npsh + 1, length = npth)]))*x))
+      }
+      if(eta2_zero){
+        dnll.eta.out <- (y)^((-1/xi) - 1) * ((-1/xi) * (xi * (mu * (sigma * ((ds + theta)^eta * log((ds + theta)))/((ds + theta)^eta)^2))/(sigma.d) + xi * (xdat - (mu.d)) * 
+                                                          (sigma * ((ds + theta)^eta * log((ds + theta)))/((ds + theta)^eta)^2)/(sigma.d)^2)) - sigma * 
+          ((ds + theta)^eta * log((ds + theta)))/((ds + theta)^eta)^2/(sigma.d) + 
+          (xi * (mu * (sigma * ((ds + theta)^eta * log((ds + theta)))/((ds + theta)^eta)^2))/(sigma.d) + xi * (xdat - (mu.d)) * 
+             (sigma * ((ds + theta)^eta * log((ds + theta)))/((ds + theta)^eta)^2)/(sigma.d)^2)/(y) * (1/xi + 1)
+        dnll.eta <- apply(etmat,2,function(x)sum(dnll.eta.out*etalink$mu.eta(etmat %*% (a[seq(npmu + npsc + npsh + npth + 1, length = npet)]))*x))
+      }else{
+        dnll.eta.out <- (y)^((-1/xi) - 1) * ((-1/xi) * (xi * (mu * (sigma * ((ds + theta)^eta * log((ds + theta)))/((ds + theta)^eta)^2))/(sigma.d))) + xi * 
+          (mu * (sigma * ((ds + theta)^eta * log((ds + theta)))/((ds + theta)^eta)^2))/(sigma.d)/(y) * (1/xi + 1)
+        dnll.eta <- apply(etmat,2,function(x)sum(dnll.eta.out*etalink$mu.eta(etmat %*% (a[seq(npmu + npsc + npsh + npth + 1, length = npet)]))*x))
+        dnll.eta2.out <- (y)^((-1/xi) - 1) * ((-1/xi) * (xi * (xdat - (mu.d)) * (sigma * ((ds + theta)^eta2 * log((ds + theta)))/((ds + theta)^eta2)^2)/(sigma.d)^2)) - 
+          sigma * ((ds + theta)^eta2 * log((ds + theta)))/((ds + theta)^eta2)^2/(sigma.d) + xi * (xdat - (mu.d)) * 
+          (sigma * ((ds + theta)^eta2 * log((ds + theta)))/((ds + theta)^eta2)^2)/(sigma.d)^2/(y) * (1/xi + 1)
+        dnll.eta2 <- apply(e2mat,2,function(x)sum(dnll.eta2.out*eta2link$mu.eta( e2mat %*% (a[seq(npmu + npsc + npsh + npth + npet + 1, length = npe2)]))*x))
+      }
+      if(!tau_zero){
+        dnll.tau.out <- 1/(sigma.d) - (y)^((-1/xi) - 1) * ((-1/xi) * (xi * mu/(sigma.d) + xi * (xdat - (mu.d))/(sigma.d)^2)) - 
+          (xi * mu/(sigma.d) + xi * (xdat - (mu.d))/(sigma.d)^2)/(y) * (1/xi + 1)
+        dnll.tau <- apply(tamat,2,function(x)sum(dnll.tau.out*taulink$mu.eta(tamat %*% (a[seq(npmu + npsc + npsh + npth + npet + npe2 + 1, length = npta)]))*x))
+      }
+      
+      grad.nll <- c(dnll.mu,dnll.sigma,dnll.xi,if(!theta_zero){dnll.theta},dnll.eta,if(!eta2_zero){dnll.eta2},if(!tau_zero){dnll.tau})
+      
+      if(any(theta < 0)) {return(rep(0,length(grad.nll)))}  # check definition condition for theta
+      if(any(eta <= 0) || any(sigma.d <= 0) || any(y <= 0)) return(rep(0,length(grad.nll)))
+      if(any(tau < 0))    {return(rep(0,length(grad.nll)))}  # check definition condition for tau.
+      if(any(eta2 <= 0))    {return(rep(0,length(grad.nll)))}  # check definition condition for eta2.
+      
+      return(grad.nll)
     }
 
-
     # finding minimum of log-likelihood:
-    x <- optim(init, gev.lik, hessian = TRUE, method = method,
+    x <- optim(init, gev.lik, hessian = TRUE, method = method, gr = gev.grad,
                control = list(maxit = maxit, ...))
 
     # saving output parameters:
@@ -284,8 +329,10 @@ gev.d.fit<-
     
     if(!eta2_zero){  #When user wants to use eta2 parameter
       eta2 <- eta2link$linkinv(e2mat %*% (x$par[seq(npmu + npsc + npsh + npth + npet + 1,length = npe2)]))
+      #transform eta2 to eta~~eta2 oriented
+      eta2 <- eta2 - eta
     }else{ #When user requests not to have eta2 parameter (default)
-      eta2 <- eta
+      eta2 <- 0#eta
     }
     
     if(!tau_zero){  #When user does NOT set tau parameter to zero (not default)
@@ -296,13 +343,17 @@ gev.d.fit<-
       
     z$nllh <- x$value
     # normalize data to standard Gumbel:
-    #sc.d  <-      sc0/((ds+theta)^eta)+tau  # old
-    sc.d  <-      sc0/((ds+theta)^eta2)+tau  # new
+    sc.d  <-      sc0/((ds+theta)^(eta+eta2))+tau  # new
     mut.d <- mut*(sc0/((ds+theta)^eta )+tau) # new
 
     #z$data <-  - log(as.vector((1 + xi * (xdat/sc.d-mut))^(-1/xi)))  # old
     z$data <-  - log(as.vector((1 + xi * ((xdat-mut.d)/sc.d))^(-1/xi))) # new
     z$mle <- x$par
+    
+    #z$mle$eta2 = z$mle$eta2-z$mle$eta 
+    # do not transform eta2 in mle, because the original estimated parameters should be here. 
+    # for the transformed parameters, use gev.d.params
+  
     test <- try(              # catch error
     z$cov <- solve(x$hessian) # invert hessian to get estimation on var-covar-matrix
     ,silent = TRUE )
@@ -311,29 +362,11 @@ gev.d.fit<-
       z$cov <- matrix(NA,length(z$mle),length(z$mle))
         }
     z$se <- sqrt(diag(z$cov)) # sqrt(digonal entries) = standart error of mle's
-    'if (!theta_zero) {#When theta parameter is returned (default)
-      if (!tau_zero){ # when tau is returned
-        z$vals <- cbind(mut, sc0, xi, theta, eta, tau)
-      }else{ # when tau is not returned
-        z$vals <- cbind(mut, sc0, xi, theta, eta)
-      }
-    } else {#When theta parameter is not returned, asked by user
-      if (!tau_zero){ # if tau is returned
-        z$vals <- cbind(mut, sc0, xi, eta, tau)
-      }else{ # if tau is not returned
-        z$vals <- cbind(mut, sc0, xi, eta)
-      }
-    }'
     z$vals <- cbind(mut, sc0, xi, theta, eta, eta2, tau)
-    z$init.vals <- unlist(init.vals)
-
-    'names2 = c("mut","sigma0","xi")               # fixed part for set of names
-    if(!theta_zero){names2=c(names2,"theta")}     # add theta (in case)
-    names2 = c(names2, "eta")                     # add eta (always)
-    if(!tau_zero){names2=c(names2, "tau")}        # add tau (in case)
-    colnames(z$vals) <- names2'
     colnames(z$vals) <- c("mut","sigma0","xi","theta","eta","eta2","tau")
-    
+    z$init.vals <- unlist(init.vals)
+    # transform eta2 to zero-oriented
+    z$init.vals[6] = z$init.vals[6] + z$init.vals[4]
     z$ds <- ds
     z$theta_zero <- theta_zero #Indicates if theta parameter was set to zero by user.
     z$tau_zero <- tau_zero     #Indicates if tau parameter was set to zero by user. (default)
@@ -398,7 +431,7 @@ gev.d.init <- function(xdat,ds,link){
   siginit <- link$sigma0link$linkfun(exp(lmsig$coefficients[[1]]))
   # eta <- mean of negativ slopes
   etainit <- link$etalink$linkfun(mean(c(-lmsig$coefficients[[2]],-lmmu$coefficients[[2]])))
-  eta2init <- etainit + 0.0
+  eta2init <- 0.0 #etainit + 0.0
   # mean of mu_d/sig_d
   # could try:
   # mu0/sig0 = exp(lmmu$coefficients[[1]])/exp(lmsig$coefficients[[1]])
@@ -433,8 +466,8 @@ gev.d.init <- function(xdat,ds,link){
 #' params <- gev.d.params(fit,ydat = as.matrix(test.set[c('cov1','cov2')]))
 #' gev.d.lik(xdat = test.set$dat,ds = test.set$d,mut = params[,1],sigma0 = params[,2],xi = params[,3]
 #'           ,theta = params[,4],eta = params[,5],log=TRUE)
-gev.d.lik <- function(xdat,ds,mut,sigma0,xi,theta,eta,log=FALSE,tau=0,eta2=NULL) {
-  if (is.null(eta2)){eta2=eta}
+gev.d.lik <- function(xdat,ds,mut,sigma0,xi,theta,eta,log=FALSE,tau=0,eta2=0) {
+  eta2 = eta+eta2
   if(any(xi==0)){stop('Function is not defined for shape parameter of zero.')}
   if(any(! c(length(ds),length(mut),length(sigma0),length(xi),length(theta),length(eta),length(eta2),length(tau)) %in%
          c(1,length(xdat)))){
@@ -479,11 +512,13 @@ gev.d.lik <- function(xdat,ds,mut,sigma0,xi,theta,eta,log=FALSE,tau=0,eta2=NULL)
 #' @param legend logical indicating if legends should be plotted
 #' @param title character vector of length 2, giving the titles for the pp- and the qq-plot
 #' @param emp.lab,mod.lab character string containing names for empirical and model axis
+#' @param ci logical indicating whether 0.95 confidence intervals should be plotted
 #' @param ... additional parameters passed on to the plotting function
 #'
 #' @export
 #' @importFrom graphics plot abline par title
 #' @importFrom grDevices rainbow
+#' @importFrom evd rgev
 #'
 #' @examples
 #' data('example',package ='IDF')
@@ -491,15 +526,15 @@ gev.d.lik <- function(xdat,ds,mut,sigma0,xi,theta,eta,log=FALSE,tau=0,eta2=NULL)
 #' fit <- gev.d.fit(xdat=example$dat,ds = example$d,ydat=as.matrix(example[,c('cov1','cov2')])
 #'                  ,mutl=c(1,2),sigma0l=1)
 #' # diagnostic plots for complete data
-#' gev.d.diag(fit,pch=1)
+#' gev.d.diag(fit,pch=1,ci = TRUE)
 #' # diagnostic plots for subset of data (e.g. one station)
-#' gev.d.diag(fit,subset = example$cov1==1,pch=1)
+#' gev.d.diag(fit,subset = example$cov1==1,pch=1,ci = TRUE)
 gev.d.diag <- function(fit,subset=NULL,cols=NULL,pch=NULL,which='both',mfrow=c(1,2),legend=TRUE,
                        title=c('Residual Probability Plot','Residual Quantile Plot'),
-                       emp.lab='Empirical',mod.lab='Model',...){
+                       emp.lab='Empirical',mod.lab='Model',ci=FALSE,...){
   # check parameter:
   if(!is.element(which,c('both','pp','qq'))) stop("Parameter 'which'= ",which,
-                                                 " but only 'both','pp' or 'qq' are allowed.")
+                                                  " but only 'both','pp' or 'qq' are allowed.")
   # subset data
   df <- data.frame(data=fit$data,ds=fit$ds)
   if(!is.null(subset)){
@@ -511,40 +546,59 @@ gev.d.diag <- function(fit,subset=NULL,cols=NULL,pch=NULL,which='both',mfrow=c(1
   durs <- sort(unique(df$ds))
   # rescale durations to assign colors
   df$cval <- sapply(df$ds,function(d){which(durs==d)})
-
+  
   # sort data
   df <- df[order(df$data),]
-
+  
   # plotting position
   n <- length(df$data)
   px <- (1:n)/(n + 1)
-
+  
+  # get 95% confidence intervals
+  if(ci){
+    samp <- rgev(n * 99, loc = 0, scale = 1, shape = 0)
+    samp <- matrix(samp, n, 99)
+    samp <- apply(samp, 2, sort)
+    samp <- apply(samp, 1, sort)
+    ci.vals <- t(samp[c(3, 97), ])
+  }else{ci.vals <- NULL}
   # create plots:
   if(which=='both') par(mfrow=mfrow) # 2 subplots
   # colors and symbols
   if(is.null(cols))cols <- rainbow(length(durs))
-  if(is.null(pch))pch <- df$cval
-
+  if(length(cols)<length(durs)) cols <- rep(cols, length.out=length(durs)) 
+  if(is.null(pch))pch <- 0:(length(durs)-1)#df$cval
+  if(length(pch)<length(durs)) pch <- rep(pch, length.out=length(durs))
+  
   if(which=='both'|which=='pp'){
     # pp
-    plot(px, exp( - exp( - df$data)), xlab =
-           emp.lab, ylab = mod.lab,col=cols[df$cval],pch=pch,...)
+    plot(px, exp( - exp( - df$data)), xlab = emp.lab, ylab = mod.lab,col=cols[df$cval]
+         ,pch=pch[df$cval],ylim=range(exp( - exp(-c(ci.vals,df$data))),na.rm = TRUE),...)
     abline(0, 1, col = 1,lwd=1)
+    if(ci){
+      lines(px,exp( - exp( - ci.vals[,1])),lty=2)
+      lines(px,exp( - exp( - ci.vals[,2])),lty=2)
+    }
     title(title[1])
-    if(legend){legend('bottomright',legend = round(durs,digits = 2),pch=pch,
+    if(legend){legend('bottomright',legend = round(durs,digits = 2),pch=pch[1:length(durs)],
                       col = cols[1:length(durs)],title = 'Duration [h]',ncol = 2)}
   }
   if(which=='both'|which=='qq'){
     # qq
-    plot( - log( - log(px)), df$data, ylab =
-            emp.lab, xlab = mod.lab,col=cols[df$cval],pch=pch,...)
+    plot( - log( - log(px)), df$data, ylab = emp.lab, xlab = mod.lab,col=cols[df$cval]
+          ,pch=pch[df$cval],ylim=range(c(ci.vals,df$data),na.rm = TRUE),...)
     abline(0, 1, col = 1,lwd=1)
+    if(ci){
+      lines(-log(-log(px)),ci.vals[,1],lty=2)
+      lines(-log(-log(px)),ci.vals[,2],lty=2)
+    }
     title(title[2])
-    if(legend){legend('bottomright',legend = round(durs,digits = 2),pch=pch,
+    if(legend){legend('bottomright',legend = round(durs,digits = 2),pch=pch[1:length(durs)],
                       col = cols[1:length(durs)],title = 'Duration [h]',ncol = 2)}
   }
   if(which=='both') par(mfrow=c(1,1)) # reset par
 }
+
 
 #### gev.d.params ####
 
@@ -567,7 +621,7 @@ gev.d.diag <- function(fit,subset=NULL,cols=NULL,pch=NULL,which='both',mfrow=c(1
 
 
 gev.d.params <- function(fit,ydat=NULL){
-  if(!class(fit)%in%c("gev.d.fit","gev.fit"))stop("'fit' must be an object returned by 'gev.d.fit' or 'gev.fit'.")
+  if(!inherits(fit,c("gev.fit","gev.d.fit")))stop("'fit' must be an object returned by 'gev.d.fit' or 'gev.fit'.")
   if(!is.null(ydat)){
     # check covariates matrix
     if(!is.matrix(ydat))stop("'ydat' must be of class matrix.")
@@ -582,7 +636,7 @@ gev.d.params <- function(fit,ydat=NULL){
   npmu <- length(fit$model[[1]]) + 1
   npsc <- length(fit$model[[2]]) + 1
   npsh <- length(fit$model[[3]]) + 1
-  if(class(fit)=="gev.d.fit"){
+  if(inherits(fit,"gev.d.fit")){
     if(!fit$theta_zero){
       npth <- length(fit$model[[4]]) + 1 #Including theta parameter (default)]
     }else{
@@ -602,7 +656,7 @@ gev.d.params <- function(fit,ydat=NULL){
   }
 
   # inverse link functions
-  if(class(fit)=="gev.d.fit"){
+  if(inherits(fit,"gev.d.fit")){
     mulink <- fit$link$mutlink$linkinv
     siglink <- fit$link$sigma0link$linkinv
     shlink <- fit$link$xilink$linkinv
@@ -620,7 +674,7 @@ gev.d.params <- function(fit,ydat=NULL){
   mumat <- cbind(rep(1, dim(ydat)[1]), matrix(ydat[, fit$model[[1]]],dim(ydat)[1],npmu-1))
   sigmat <- cbind(rep(1, dim(ydat)[1]), matrix(ydat[, fit$model[[2]]],dim(ydat)[1],npsc-1))
   shmat <- cbind(rep(1, dim(ydat)[1]), matrix(ydat[, fit$model[[3]]],dim(ydat)[1],npsh-1))
-  if(class(fit)=="gev.d.fit"){
+  if(inherits(fit,"gev.d.fit")){
     if(!fit$theta_zero){thmat <- cbind(rep(1, dim(ydat)[1]), matrix(ydat[, fit$model[[4]]],dim(ydat)[1],npth-1))}
     etmat <- cbind(rep(1, dim(ydat)[1]), matrix(ydat[, fit$model[[5]]],dim(ydat)[1],npet-1))
     if(!fit$eta2_zero) {e2mat <- cbind(rep(1, dim(ydat)[1]), matrix(ydat[, fit$model[[6]]],dim(ydat)[1],npe2-1))}
@@ -631,7 +685,7 @@ gev.d.params <- function(fit,ydat=NULL){
   mut <- mulink(mumat %*% (fit$mle[1:npmu]))
   sc0 <- siglink(sigmat %*% (fit$mle[seq(npmu + 1, length = npsc)]))
   xi <- shlink(shmat %*% (fit$mle[seq(npmu + npsc + 1, length = npsh)]))
-  if(class(fit)=="gev.d.fit"){
+  if(inherits(fit,"gev.d.fit")){
     if(!fit$theta_zero){
       theta <- thetalink(thmat %*% (fit$mle[seq(npmu + npsc + npsh + 1, length = npth)]))
     }else{
@@ -640,8 +694,10 @@ gev.d.params <- function(fit,ydat=NULL){
     eta <- etalink(etmat %*% (fit$mle[seq(npmu + npsc + npsh + npth + 1, length = npet)]))
     if(!fit$eta2_zero){
       eta2 <- eta2link(e2mat %*% (fit$mle[seq(npmu + npsc + npsh + npth + npet + 1, length = npe2)]))
+      # transform eta2 from eta2~~eta to eta2~~0
+      eta2 <- eta2-eta
     }else{
-      eta2 <- eta #rep(0,dim(ydat)[1])
+      eta2 <- rep(0,dim(ydat)[1]) #eta
     }
     if(!fit$tau_zero){
       tau <- taulink(tamat %*% (fit$mle[seq(npmu + npsc + npsh + npth + npet + npe2 + 1, length = npta)]))

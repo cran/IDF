@@ -14,7 +14,7 @@ gev.d.lik(
   eta,
   log = FALSE,
   tau = 0,
-  eta2 = NULL
+  eta2 = 0
 )
 }
 \arguments{

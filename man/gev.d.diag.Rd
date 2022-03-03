@@ -15,6 +15,7 @@ gev.d.diag(
   title = c("Residual Probability Plot", "Residual Quantile Plot"),
   emp.lab = "Empirical",
   mod.lab = "Model",
+  ci = FALSE,
   ...
 )
 }
@@ -41,6 +42,8 @@ set to \code{c(1,1)}.}
 
 \item{emp.lab, mod.lab}{character string containing names for empirical and model axis}
 
+\item{ci}{logical indicating whether 0.95 confidence intervals should be plotted}
+
 \item{...}{additional parameters passed on to the plotting function}
 }
 \description{
@@ -54,7 +57,7 @@ data('example',package ='IDF')
 fit <- gev.d.fit(xdat=example$dat,ds = example$d,ydat=as.matrix(example[,c('cov1','cov2')])
                  ,mutl=c(1,2),sigma0l=1)
 # diagnostic plots for complete data
-gev.d.diag(fit,pch=1)
+gev.d.diag(fit,pch=1,ci = TRUE)
 # diagnostic plots for subset of data (e.g. one station)
-gev.d.diag(fit,subset = example$cov1==1,pch=1)
+gev.d.diag(fit,subset = example$cov1==1,pch=1,ci = TRUE)
 }
