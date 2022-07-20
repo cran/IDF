@@ -1,3 +1,8 @@
+# IDF 2.1.2
+
+## Minor
+Change of Maintainer. The new Maintainer is Felix Fauer. 
+
 # IDF 2.1.1
 
 ## New features
